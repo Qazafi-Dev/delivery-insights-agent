@@ -1,3 +1,4 @@
+import datetime
 from datetime import date
 
 import ollama
@@ -28,21 +29,36 @@ TOOLS = [
 ]
 
 SYSTEM = (
-    "You are a delivery analytics assistant. Answer questions about the data by "
-    "calling run_sql_query with a single SQLite SELECT statement. Never guess "
-    "numbers; always query. Only delivered orders count as completed. "
+    "You are a delivery analytics assistant. You only answer questions about "
+    "delivery data: orders, restaurants, drivers, delivery times, tips and cancellations. "
+    "Get every number by calling the run_sql_query tool. Never write SQL in your reply. "
+    "You cannot process refunds, cancel orders, or change any data. If the request is "
+    "outside delivery analytics, say so in one or two sentences and suggest a question "
+    "you can answer instead. Only delivered orders count as completed. "
     f"Today's date is {date.today().isoformat()}. Keep answers short and clear.\n\n"
     "Database schema:\n"
 )
 
+FALLBACK = (
+    "I can only answer questions about the delivery data: orders, restaurants, "
+    "drivers, delivery times, tips and cancellations. I can't process refunds or "
+    'change orders. Try: "Which restaurant has the slowest deliveries?"'
+)
+
 
 def answer(messages: list) -> str:
+    used_tool = False
     for _ in range(MAX_STEPS):
         resp = ollama.chat(model=MODEL, messages=messages, tools=TOOLS)
         msg = resp.message
         messages.append(msg)
         if not msg.tool_calls:
-            return msg.content
+            if used_tool:
+                return msg.content
+            messages.pop()  # drop the bad reply so it can't pollute the history
+            messages.append({"role": "assistant", "content": FALLBACK})
+            return FALLBACK
+        used_tool = True
         for call in msg.tool_calls:
             try:
                 result = run_query(call.function.arguments["query"])
