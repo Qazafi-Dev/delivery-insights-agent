@@ -10,7 +10,7 @@ A local AI chatbot that answers questions about food-delivery operations in plai
 
 ## Run it (from the project root)
     brew install ollama && brew services start ollama
-    ollama pull qwen2.5:1.5b
+    ollama pull qwen2.5:3b
     uv sync
     uv run python -m delivery_insights_agent.seed
     uv run python -m delivery_insights_agent.agent
