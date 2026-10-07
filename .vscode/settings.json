@@ -1,0 +1,11 @@
+{
+  "sqltools.connections": [
+    {
+      "previewLimit": 50,
+      "driver": "SQLite",
+      "name": "delivery",
+      "database": "/Users/apple/Developer/delivery-insights-agent/delivery.db"
+    }
+  ],
+  "sqltools.useNodeRuntime": true
+}
